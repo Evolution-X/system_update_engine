@@ -204,7 +204,7 @@ void DownloadAction::TerminateProcessing() {
   http_fetcher_->TerminateTransfer();
 }
 
-void DownloadAction::SeekToOffset(off_t offset) {
+void DownloadAction::SeekToOffset(off64_t offset) {
   bytes_received_ = offset;
 }
 
