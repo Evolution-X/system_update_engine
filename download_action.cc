@@ -20,7 +20,6 @@
 
 #include <base/files/file_path.h>
 #include <base/metrics/statistics_recorder.h>
-#include <android-base/stringprintf.h>
 
 #include "update_engine/common/boot_control_interface.h"
 #include "update_engine/common/error_code_utils.h"

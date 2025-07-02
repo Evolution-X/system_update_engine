@@ -16,9 +16,7 @@
 
 #include "update_engine/libcurl_http_fetcher.h"
 
-#include <netinet/in.h>
 #include <resolv.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include <algorithm>
@@ -28,7 +26,6 @@
 #include <base/format_macros.h>
 #include <base/location.h>
 #include <base/logging.h>
-#include <base/strings/string_split.h>
 #include <android-base/stringprintf.h>
 #include <base/threading/thread_task_runner_handle.h>
 
