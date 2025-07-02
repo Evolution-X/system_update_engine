@@ -143,7 +143,6 @@ class DownloadAction : public InstallPlanAction, public HttpFetcherDelegate {
   // For reporting status to outsiders
   DownloadActionDelegate* delegate_;
   uint64_t bytes_received_{0};  // per file/range
-  uint64_t bytes_received_previous_payloads_{0};
   uint64_t bytes_total_{0};
   bool download_active_{false};
 
