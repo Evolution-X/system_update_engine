@@ -17,6 +17,7 @@
 #include "update_engine/libcurl_http_fetcher.h"
 
 #include <resolv.h>
+#include <stdint.h>
 #include <unistd.h>
 
 #include <algorithm>
@@ -207,10 +208,10 @@ void LibcurlHttpFetcher::ResumeTransfer(const string& url) {
 
     // Compute end offset, if one is specified. As per HTTP specification, this
     // is an inclusive boundary. Make sure it doesn't overflow.
-    size_t end_offset = 0;
+    uint64_t end_offset = 0;
     if (download_length_) {
-      end_offset = static_cast<size_t>(resume_offset_) + download_length_ - 1;
-      CHECK_LE((size_t)resume_offset_, end_offset);
+      end_offset = static_cast<uint64_t>(resume_offset_) + download_length_ - 1;
+      CHECK_LE(static_cast<uint64_t>(resume_offset_), end_offset);
     }
 
     // Create a string representation of the desired range.
@@ -572,10 +573,12 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
   ignore_failure_ = false;
 }
 
-size_t LibcurlHttpFetcher::LibcurlWrite(void* ptr, size_t size, size_t nmemb) {
+uint64_t LibcurlHttpFetcher::LibcurlWrite(void* ptr,
+                                          size_t size,
+                                          size_t nmemb) {
   // Update HTTP response first.
   GetHttpResponseCode();
-  const size_t payload_size = size * nmemb;
+  const uint64_t payload_size = static_cast<uint64_t>(size) * nmemb;
 
   // Do nothing if no payload or HTTP response is an error.
   if (payload_size == 0 || !IsHttpResponseSuccess()) {
