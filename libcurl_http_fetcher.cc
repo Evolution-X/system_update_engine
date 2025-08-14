@@ -261,8 +261,11 @@ void LibcurlHttpFetcher::ResumeTransfer(const string& url) {
 #endif  // __ANDROID__
     } else {
       LOG(ERROR) << "Received invalid URI: " << url_;
-      // Lock down to no protocol supported for the transfer.
-      CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_PROTOCOLS, 0), CURLE_OK);
+      // Lock down to no protocol supported for the transfer. Passing an empty
+      // string will disable all protocols. This will return
+      // CURLE_BAD_FUNCTION_ARGUMENT
+      CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_PROTOCOLS_STR, ""),
+               CURLE_BAD_FUNCTION_ARGUMENT);
     }
   } else {
     LOG(INFO) << "Not setting http(s) curl options because we are "
@@ -276,11 +279,10 @@ void LibcurlHttpFetcher::ResumeTransfer(const string& url) {
 // Lock down only the protocol in case of HTTP.
 void LibcurlHttpFetcher::SetCurlOptionsForHttp() {
   LOG(INFO) << "Setting up curl options for HTTP";
-  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_PROTOCOLS, CURLPROTO_HTTP),
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_PROTOCOLS_STR, "http"),
            CURLE_OK);
-  CHECK_EQ(
-      curl_easy_setopt(curl_handle_, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTP),
-      CURLE_OK);
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_REDIR_PROTOCOLS_STR, "http"),
+           CURLE_OK);
 }
 
 // Security lock-down in official builds: makes sure that peer certificate
@@ -294,11 +296,10 @@ void LibcurlHttpFetcher::SetCurlOptionsForHttps() {
   CHECK_EQ(curl_easy_setopt(
                curl_handle_, CURLOPT_CAPATH, constants::kCACertificatesPath),
            CURLE_OK);
-  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS),
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_PROTOCOLS_STR, "https"),
            CURLE_OK);
-  CHECK_EQ(
-      curl_easy_setopt(curl_handle_, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTPS),
-      CURLE_OK);
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_REDIR_PROTOCOLS_STR, "https"),
+           CURLE_OK);
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_CIPHER_LIST, "HIGH:!ADH"),
            CURLE_OK);
   if (server_to_check_ != ServerToCheck::kNone) {
@@ -315,11 +316,10 @@ void LibcurlHttpFetcher::SetCurlOptionsForHttps() {
 // Lock down only the protocol in case of a local file.
 void LibcurlHttpFetcher::SetCurlOptionsForFile() {
   LOG(INFO) << "Setting up curl options for FILE";
-  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_PROTOCOLS, CURLPROTO_FILE),
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_PROTOCOLS_STR, "file"),
            CURLE_OK);
-  CHECK_EQ(
-      curl_easy_setopt(curl_handle_, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_FILE),
-      CURLE_OK);
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_REDIR_PROTOCOLS_STR, "file"),
+           CURLE_OK);
 }
 
 // Begins the transfer, which must not have already been started.
@@ -586,9 +586,9 @@ size_t LibcurlHttpFetcher::LibcurlWrite(void* ptr, size_t size, size_t nmemb) {
 
   sent_byte_ = true;
   {
-    double transfer_size_double{};
+    curl_off_t transfer_size_double{};
     CHECK_EQ(curl_easy_getinfo(curl_handle_,
-                               CURLINFO_CONTENT_LENGTH_DOWNLOAD,
+                               CURLINFO_CONTENT_LENGTH_DOWNLOAD_T,
                                &transfer_size_double),
              CURLE_OK);
     off64_t new_transfer_size = static_cast<off64_t>(transfer_size_double);
