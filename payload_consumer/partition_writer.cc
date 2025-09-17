@@ -21,7 +21,6 @@
 
 #include <inttypes.h>
 
-#include <algorithm>
 #include <initializer_list>
 #include <memory>
 #include <string>
@@ -269,17 +268,13 @@ FileDescriptorPtr PartitionWriter::ChooseSourceFD(
 int PartitionWriter::Close() {
   int err = 0;
 
-  source_path_.clear();
-
   if (target_fd_ && !target_fd_->Close()) {
     err = errno;
-    PLOG(ERROR) << "Error closing target partition";
+    PLOG(ERROR) << "Error closing target partition " << target_path_;
     if (!err)
       err = 1;
   }
   target_fd_.reset();
-  target_path_.clear();
-
   return -err;
 }
 
