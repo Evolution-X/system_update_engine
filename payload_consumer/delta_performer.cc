@@ -201,9 +201,6 @@ bool DeltaPerformer::HandleOpResult(bool op_result,
 }
 
 int DeltaPerformer::Close() {
-  // Checkpoint update progress before canceling, so that subsequent attempts
-  // can resume from exactly where update_engine left last time.
-  CheckpointUpdateProgress(true);
   int err = -CloseCurrentPartition();
   LOG_IF(ERROR,
          !payload_hash_calculator_.Finalize() ||

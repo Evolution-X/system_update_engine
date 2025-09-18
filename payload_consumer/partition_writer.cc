@@ -94,7 +94,8 @@ FileDescriptorPtr OpenFile(const char* path,
   FileDescriptorPtr fd(new EintrSafeFileDescriptor());
   if (cache_writes && !read_only) {
     fd = FileDescriptorPtr(new CachedFileDescriptor(fd, kCacheSize));
-    LOG(INFO) << "Caching writes.";
+    LOG(INFO) << "Caching writes on " << path << " with " << (kCacheSize / 1024)
+              << " KiB cache";
   }
   if (!fd->Open(path, mode, 000)) {
     *err = errno;
