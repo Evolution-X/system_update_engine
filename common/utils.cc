@@ -53,6 +53,7 @@
 #include <base/strings/string_number_conversions.h>
 #include <base/strings/string_split.h>
 #include <android-base/stringprintf.h>
+#include <android-base/unique_fd.h>
 #include <brillo/data_encoding.h>
 
 #include "update_engine/common/constants.h"
@@ -357,6 +358,15 @@ bool ReadFileChunk(const string& path,
                    off64_t size,
                    brillo::Blob* out_p) {
   return ReadFileChunkAndAppend(path, offset, size, out_p);
+}
+
+off64_t BlockDevSize(const char* path) {
+  android::base::unique_fd fd(open(path, O_RDONLY | O_CLOEXEC));
+  if (fd == -1) {
+    PLOG(ERROR) << "Error opening " << path;
+    return fd;
+  }
+  return BlockDevSize(fd);
 }
 
 off64_t BlockDevSize(int fd) {
@@ -707,7 +717,7 @@ bool MountFilesystem(const string& device,
                      const string& fs_mount_options) {
   vector<const char*> fstypes;
   if (type.empty()) {
-    fstypes = {"ext2", "ext3", "ext4", "squashfs", "erofs"};
+    fstypes = {"ext2", "ext3", "ext4", "erofs"};
   } else {
     fstypes = {type.c_str()};
   }
@@ -1238,9 +1248,10 @@ ErrorCode IsTimestampNewer(const std::string_view old_version,
   return ErrorCode::kSuccess;
 }
 
-std::unique_ptr<android::base::MappedFile> GetReadonlyZeroBlock(size_t size) {
+std::optional<android::base::MappedFile> GetReadonlyZeroBlock(size_t size) {
   android::base::unique_fd fd{HANDLE_EINTR(open("/dev/zero", O_RDONLY))};
-  return android::base::MappedFile::FromFd(fd, 0, size, PROT_READ);
+  return android::base::MappedFile::Create(
+      android::base::borrowed_fd(fd), 0, size, PROT_READ);
 }
 
 std::string_view GetReadonlyZeroString(size_t size) {

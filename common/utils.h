@@ -151,6 +151,7 @@ bool ReadPipe(const std::string& cmd, std::string* out_p);
 // Returns the size of the block device at the file descriptor fd. If an error
 // occurs, -1 is returned.
 off64_t BlockDevSize(int fd);
+off64_t BlockDevSize(const char* path);
 
 // Returns the size of the file at path, or the file descriptor fd. If the file
 // is actually a block device, this function will automatically call
@@ -213,7 +214,7 @@ bool SetBlockDeviceReadOnly(const std::string& device, bool read_only);
 // Synchronously mount or unmount a filesystem. Return true on success.
 // When mounting, it will attempt to mount the device as the passed filesystem
 // type |type|, with the passed |flags| options. If |type| is empty, "ext2",
-// "ext3", "ext4" and "squashfs" will be tried.
+// "ext3", and "ext4" will be tried.
 bool MountFilesystem(const std::string& device,
                      const std::string& mountpoint,
                      unsigned long flags,  // NOLINT(runtime/int)
@@ -418,7 +419,7 @@ std::string GetExclusionName(const std::string& str_to_convert);
 ErrorCode IsTimestampNewer(const std::string_view old_version,
                            const std::string_view new_version);
 
-std::unique_ptr<android::base::MappedFile> GetReadonlyZeroBlock(size_t size);
+std::optional<android::base::MappedFile> GetReadonlyZeroBlock(size_t size);
 
 std::string_view GetReadonlyZeroString(size_t size);
 
