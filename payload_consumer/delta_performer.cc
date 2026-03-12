@@ -1031,7 +1031,7 @@ bool DeltaPerformer::PerformReplaceOperation(
         operation, buffer_.data(), buffer_.size()));
   }
   // Update buffer
-  DiscardBuffer(true, buffer_.size());
+  DiscardBuffer(true, operation.data_length());
   return true;
 }
 
@@ -1099,7 +1099,7 @@ bool DeltaPerformer::PerformDiffOperation(const InstallOperation& operation,
     TEST_AND_RETURN_FALSE(partition_writer_->PerformDiffOperation(
         operation, error, buffer_.data(), buffer_.size()));
   }
-  DiscardBuffer(true, buffer_.size());
+  DiscardBuffer(true, operation.data_length());
   return true;
 }
 
