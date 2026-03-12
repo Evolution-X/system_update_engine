@@ -199,7 +199,9 @@ size_t DeltaPerformer::CopyDataToBuffer(const char** bytes_p,
   if (!count)
     return 0;  // Special case shortcut.
 
-  if (max > kMaxPayloadBufferSize) {
+  // We don't support parsing manifest's protobuf message from file descriptor
+  // yet, so writing manifest to disk doesn't save any memory.
+  if (max > kMaxPayloadBufferSize && manifest_valid_) {
     if (!payload_fd_.ok()) {
       int fd = open(GetTempDir(), O_TMPFILE | O_RDWR | O_CLOEXEC, 0600);
       if (fd < 0) {
