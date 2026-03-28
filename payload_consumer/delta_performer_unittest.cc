@@ -1369,4 +1369,36 @@ TEST_F(DeltaPerformerTest, LargeReplaceOperationSignedHashTest) {
             performer_.VerifyPayload(payload_hash, payload_data.size()));
 }
 
+TEST_F(DeltaPerformerTest, CanResumeUpdateRelaxedCheckTest) {
+  const std::string payload_id = "test-payload-id";
+  const std::string wrong_payload_id = "wrong-payload-id";
+
+  // Set up mandatory prefs for resumption
+  ASSERT_TRUE(prefs_.SetInt64(kPrefsManifestMetadataSize, 100));
+  ASSERT_TRUE(prefs_.SetInt64(kPrefsManifestSignatureSize, 50));
+  ASSERT_TRUE(prefs_.SetInt64(kPrefsUpdateStateNextDataOffset, 0));
+  ASSERT_TRUE(prefs_.SetString(kPrefsUpdateStateSHA256Context, "some-context"));
+
+  // 1. next_operation = 0 (initial state), should SUCCEED now
+  ASSERT_TRUE(prefs_.SetInt64(kPrefsUpdateStateNextOperation, 1));
+  ASSERT_TRUE(prefs_.SetString(kPrefsUpdateCheckResponseHash, payload_id));
+  ASSERT_TRUE(DeltaPerformer::CanResumeUpdate(&prefs_, payload_id));
+
+  // 2. next_operation = 100, should SUCCEED
+  ASSERT_TRUE(prefs_.SetInt64(kPrefsUpdateStateNextOperation, 100));
+  ASSERT_TRUE(DeltaPerformer::CanResumeUpdate(&prefs_, payload_id));
+
+  // 3. Hash mismatch, should FAIL
+  ASSERT_FALSE(DeltaPerformer::CanResumeUpdate(&prefs_, wrong_payload_id));
+
+  // 4. Empty hash in prefs, should FAIL
+  ASSERT_TRUE(prefs_.Delete(kPrefsUpdateCheckResponseHash));
+  ASSERT_FALSE(DeltaPerformer::CanResumeUpdate(&prefs_, payload_id));
+
+  // 5. Missing mandatory metadata size, should FAIL
+  ASSERT_TRUE(prefs_.SetString(kPrefsUpdateCheckResponseHash, payload_id));
+  ASSERT_TRUE(prefs_.Delete(kPrefsManifestMetadataSize));
+  ASSERT_FALSE(DeltaPerformer::CanResumeUpdate(&prefs_, payload_id));
+}
+
 }  // namespace chromeos_update_engine
